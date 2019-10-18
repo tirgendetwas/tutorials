@@ -4,7 +4,6 @@ import argparse
 import numpy as np
 import precice_future as precice
 
-force_excitement = np.array([0, 10, 0])
 omega_excitement = 1
 
 # beam geometry
@@ -18,7 +17,7 @@ x_attack = x_right
 y_attack = .5 * (y_bottom + y_top)
 
 
-def compute_force(time):
+def compute_force(time, force_excitement):
     omega = omega_excitement
     force_0 = force_excitement
     return force_0 * np.sin(omega * time)
@@ -40,7 +39,7 @@ mesh_name = "Excitement-Mesh"
 write_data_name = "Forces0"
 read_data_name = "Displacements0"
 
-n = 1
+n_vertices = 1
 
 solver_process_index = 0
 solver_process_size = 1
@@ -51,7 +50,13 @@ interface.configure(configuration_file_name)
 mesh_id = interface.get_mesh_id(mesh_name)
 
 dimensions = interface.get_dimensions()
-vertices = np.array([x_attack, y_attack, 0])
+force_excitement = np.zeros((n_vertices, dimensions))
+force_excitement[:, 0] = 0
+force_excitement[:, 1] = 10
+
+vertices = np.zeros((n_vertices, dimensions))
+vertices[:, 0] = x_attack
+vertices[:, 1] = y_attack
 
 vertex_ids = interface.set_mesh_vertices(mesh_id, vertices)
 write_data_id = interface.get_data_id(write_data_name, mesh_id)
@@ -61,7 +66,7 @@ dt = interface.initialize()
 t = 0
 
 if interface.is_action_required(precice.action_write_initial_data()):
-    forces = compute_force(t + dt)
+    forces = compute_force(t + dt, force_excitement)
     interface.write_block_vector_data(write_data_id, vertex_ids, forces)
     interface.fulfilled_action(precice.action_write_initial_data())
 
@@ -73,7 +78,7 @@ while interface.is_coupling_ongoing():
         print("DUMMY: Writing iteration checkpoint")
         interface.fulfilled_action(precice.action_write_iteration_checkpoint())
 
-    forces = compute_force(t+dt)
+    forces = compute_force(t+dt, force_excitement)
     print("sending forces: {}".format(forces))
     interface.write_block_vector_data(write_data_id, vertex_ids, forces)
     dt = interface.advance(dt)

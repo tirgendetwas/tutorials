@@ -90,10 +90,11 @@ coupling_boundary = AutoSubDomain(remaining_boundary)
 # get the adapter ready
 
 # read fenics-adapter json-config-file)
-adapter_config_filename = "../tools/precice-adapter-config-fsi-s.json"
+adapter_config_filename = "../tools/precice-adapter-config-fsi-s_wr.json"
+other_adapter_config_filename = "../tools/precice-adapter-config-excite.json"
 
 # create Adapter
-precice = Adapter(adapter_config_filename)
+precice = Adapter(adapter_config_filename, other_adapter_config_filename)
 
 # create subdomains used by the adapter
 clamped_boundary_domain = AutoSubDomain(left_boundary)
@@ -107,6 +108,7 @@ precice_dt = precice.initialize(coupling_subdomain=coupling_boundary,
                                 dimension=dim,
                                 dirichlet_boundary=clamped_boundary_domain)
 
+precice_dt = float(precice_dt)
 fenics_dt = precice_dt  # if fenics_dt == precice_dt, no subcycling is applied
 #fenics_dt = 0.02  # if fenics_dt < precice_dt, subcycling is applied
 dt = Constant(np.min([precice_dt, fenics_dt]))
@@ -238,6 +240,7 @@ while precice.is_coupling_ongoing():
             displacement_out << (u_n, t)
     
         u_tip.append(u_n(0.6, 0.2)[1])
+        print(u_n(0.6, 0.2))
         time.append(t)
     
 
@@ -251,3 +254,4 @@ plt.show()
 
 output_file = open("subiteration_out.txt", "a")
 output_file.write("{};{}\n".format(u_tip[-1], dt(0)))
+precice.finalize()

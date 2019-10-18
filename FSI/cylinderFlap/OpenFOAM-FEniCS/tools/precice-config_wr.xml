@@ -8,32 +8,32 @@
 
     <solver-interface dimensions="2" >
 
-        <data:vector name="Forces0"/>
-        <data:vector name="Displacements0"/>
+        <data:vector name="Forces1"/>
+        <data:vector name="Displacements1"/>
 
         <mesh name="Excitement-Mesh">
-            <use-data name="Forces0"/>
-            <use-data name="Displacements0"/>
+            <use-data name="Forces1"/>
+            <use-data name="Displacements1"/>
         </mesh>
 
         <mesh name="Solid">
-            <use-data name="Forces0"/>
-            <use-data name="Displacements0"/>
+            <use-data name="Forces1"/>
+            <use-data name="Displacements1"/>
         </mesh>
 
         <participant name="Excitement">
             <use-mesh name="Excitement-Mesh" provide="yes"/>
             <use-mesh name="Solid" from="fenics"/>
-            <write-data name="Forces0" mesh="Excitement-Mesh"/>
-            <read-data name="Displacements0" mesh="Excitement-Mesh"/>
+            <write-data name="Forces1" mesh="Excitement-Mesh"/>
+            <read-data name="Displacements1" mesh="Excitement-Mesh"/>
             <mapping:petrbf-thin-plate-splines direction="write" from="Excitement-Mesh" to="Solid" constraint="conservative" />
             <mapping:petrbf-thin-plate-splines direction="read" from="Solid" to="Excitement-Mesh" constraint="consistent" />
         </participant>
 
         <participant name="fenics">
             <use-mesh name="Solid" provide="yes"/>
-            <read-data name="Forces0" mesh="Solid"/>
-            <write-data name="Displacements0" mesh="Solid"/>
+            <read-data name="Forces1" mesh="Solid"/>
+            <write-data name="Displacements1" mesh="Solid"/>
             <watch-point mesh="Solid" name="point1" coordinate="0.6;0.2;0." />
         </participant>
 
@@ -43,8 +43,8 @@
             <participants first="Excitement" second="fenics" />
             <max-time value="1"/>
             <timestep-length value="0.1" />
-            <exchange data="Forces0" mesh="Solid" from="Excitement" to="fenics"/>
-            <exchange data="Displacements0" mesh="Solid" from="fenics" to="Excitement" initialize="0"/>
+            <exchange data="Forces1" mesh="Solid" from="Excitement" to="fenics"/>
+            <exchange data="Displacements1" mesh="Solid" from="fenics" to="Excitement" initialize="0"/>
         </coupling-scheme:serial-explicit>
     </solver-interface>
 
