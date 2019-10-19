@@ -42,7 +42,7 @@
         <coupling-scheme:serial-explicit>
             <participants first="Excitement" second="fenics" />
             <max-time value="1"/>
-            <timestep-length value="0.1" />
+            <timestep-length value="0.001" />
             <exchange data="Forces1" mesh="Solid" from="Excitement" to="fenics"/>
             <exchange data="Displacements1" mesh="Solid" from="fenics" to="Excitement" initialize="0"/>
         </coupling-scheme:serial-explicit>

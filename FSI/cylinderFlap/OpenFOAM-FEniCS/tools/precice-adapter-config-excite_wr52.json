@@ -1,0 +1,12 @@
+{
+  "solver_name": "fenics",
+  "config_file_name": "../tools/precice-config_wr52.xml",  
+  "interface": {
+      "coupling_mesh_name": "Excitement",
+      "write_data_name": "Forces0",
+      "read_data_name": "Displacements0"
+    },
+  "waveform": {
+      "n_substeps": 2
+    }
+}

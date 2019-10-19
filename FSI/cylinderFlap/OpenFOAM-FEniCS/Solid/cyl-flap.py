@@ -10,6 +10,12 @@ import numpy as np
 import matplotlib.pyplot as plt
 from fenicsadapter import Adapter
 from enum import Enum
+import argparse
+
+parser = argparse.ArgumentParser()
+parser.add_argument("--wr-tag", "-wr", help="wr tag", choices=["11", "52"], default="11", type=str)
+parser.add_argument("--waveform-interpolation-strategy", "-wri", help="interpolation", choices=["linear", "quadratic"], default="linear", type=str)
+args = parser.parse_args()
 
 # Beam geometry
 dim = 2  # number of dimensions
@@ -71,7 +77,8 @@ v = TestFunction(V)
 
 # displacement fields
 u_np1 = Function(V)
-saved_u_old = Function(V)
+v_np1 = Function(V)
+a_np1 = Function(V)
 
 # function known from previous timestep
 u_n = Function(V)
@@ -90,11 +97,11 @@ coupling_boundary = AutoSubDomain(remaining_boundary)
 # get the adapter ready
 
 # read fenics-adapter json-config-file)
-adapter_config_filename = "../tools/precice-adapter-config-fsi-s_wr.json"
-other_adapter_config_filename = "../tools/precice-adapter-config-excite.json"
+adapter_config_filename = "../tools/precice-adapter-config-fsi-s_wr{wr_tag}.json".format(wr_tag=args.wr_tag)
+other_adapter_config_filename = "../tools/precice-adapter-config-excite_wr{wr_tag}.json".format(wr_tag=args.wr_tag)
 
 # create Adapter
-precice = Adapter(adapter_config_filename, other_adapter_config_filename)
+precice = Adapter(adapter_config_filename, other_adapter_config_filename, wr_interpolation_strategy=args.waveform_interpolation_strategy)
 
 # create subdomains used by the adapter
 clamped_boundary_domain = AutoSubDomain(left_boundary)
@@ -104,7 +111,7 @@ precice_dt = precice.initialize(coupling_subdomain=coupling_boundary,
                                 mesh=mesh,
                                 read_field=f_N_function,
                                 write_field=u_function,
-                                u_n=u_n,
+                                u_n=(u_n, v_n, a_n),
                                 dimension=dim,
                                 dirichlet_boundary=clamped_boundary_domain)
 
@@ -115,8 +122,8 @@ dt = Constant(np.min([precice_dt, fenics_dt]))
 
 
 # generalized alpha method (time stepping) parameters
-alpha_m = Constant(0.2)
-alpha_f = Constant(0.4)
+alpha_m = Constant(0)
+alpha_f = Constant(0)
 gamma = Constant(0.5 + alpha_f - alpha_m)
 beta = Constant((gamma + 0.5)**2 * 0.25)
 
@@ -187,10 +194,10 @@ def avg(x_old, x_new, alpha):
 
 
 # residual
-a_np1 = update_acceleration(du, u_n, v_n, a_n, ufl=True)
-v_np1 = update_velocity(a_np1, u_n, v_n, a_n, ufl=True)
+da = update_acceleration(du, u_n, v_n, a_n, ufl=True)
+#v_np1 = update_velocity(a_np1, u_n, v_n, a_n, ufl=True)
 
-res = m(avg(a_n, a_np1, alpha_m), v) + k(avg(u_n, du, alpha_f), v)
+res = m(avg(a_n, da, alpha_m), v) + k(avg(u_n, du, alpha_f), v)
 
 Forces_x, Forces_y = precice.create_force_boundary_condition(V)
 
@@ -214,7 +221,8 @@ u_n.rename("Displacement", "")
 u_np1.rename("Displacement", "")
 displacement_out << u_n
 
-
+u_tip_buffer = []
+t_buffer = []
 # time loop for coupling
 while precice.is_coupling_ongoing():
     A, b = assemble_system(a_form, L_form, bc)
@@ -229,19 +237,25 @@ while precice.is_coupling_ongoing():
     assert(b is not b_forces)
     solve(A, u_np1.vector(), b_forces)
     
-    t, n, precice_timestep_complete, precice_dt, Forces_x, Forces_y = precice.advance(u_np1, u_np1, u_n, t, float(dt), n)
+    a_np1 = project(update_acceleration(u_np1, u_n, v_n, a_n, ufl=False), V)
+    v_np1 = project(update_velocity(a_np1, u_n, v_n, a_n, ufl=False), V)
+    
+    t, n, precice_timestep_complete, precice_dt, Forces_x, Forces_y = precice.advance(u_np1, (u_np1, v_np1, a_np1), (u_n, v_n, a_n), t, float(dt), n)
     dt = Constant(np.min([precice_dt, fenics_dt]))
 
-    if precice_timestep_complete:
-        
-        update_fields(u_np1, saved_u_old, v_n, a_n)
-        
+    u_tip_buffer.append(u_n(0.6, 0.2)[1])
+    t_buffer.append(t)
+
+    if precice_timestep_complete:              
         if n % 20==0:
             displacement_out << (u_n, t)
     
-        u_tip.append(u_n(0.6, 0.2)[1])
+        u_tip += u_tip_buffer
+        u_tip_buffer = []
+        time += t_buffer
+        t_buffer = []
         print(u_n(0.6, 0.2))
-        time.append(t)
+
     
 
 # Plot tip displacement evolution
@@ -252,6 +266,8 @@ plt.xlabel("Time")
 plt.ylabel("Tip displacement")
 plt.show()
 
-output_file = open("subiteration_out.txt", "a")
+output_file = open("wr11_out.txt", "a")
 output_file.write("{};{}\n".format(u_tip[-1], dt(0)))
 precice.finalize()
+print(np.array2string(np.array(time), separator=','))
+print(np.array2string(np.array(u_tip), separator=','))

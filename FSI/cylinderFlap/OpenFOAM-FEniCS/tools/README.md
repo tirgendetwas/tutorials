@@ -8,16 +8,16 @@ You will have to replace `adapter_config_filename = "precice-adapter-config-fsi-
 Run the following commands from `tutorials/FSI/cylinderFlap/OpenFOAM-FEniCS`:
 
 * `python3 Solid/cyl-flap.py`
-* `python3 tools/excitement.py tools/precice-config.xml`
+* `python3 tools/excitement.py`
 
-A file `out.txt` will be created in this folder. The result of the simulation is written to this folder
+A file `out*.txt` will be created in this folder. The result of the simulation is written to this folder
 
-## Using multirate / subiterations
+## Using multirate
 
 Depending on `precice_dt` and `fenics_dt` the computations are done using multirate timeintegration or not.
 
-* *no multirate:* the input force is provided for every single timestep
-* *multirate:* the input force is only provided for the timestep size `precice_dt`, if `fenics_dt < precice_dt` the same force will be applied for all fenics timesteps inside of a window.
+* *no multirate:* the input force is provided for every single timestep append `-wr 11` to the commands for running
+* *multirate:* the input force is only provided for some timesteps, this grid does not match the grid of the structure solver. We interpolate between force evaluations. Use `-wr 52`, additionally, you can choose the interpolation strategy via `-wri linear` or `-wri quadratic`.
 
 # Convergence Study
 

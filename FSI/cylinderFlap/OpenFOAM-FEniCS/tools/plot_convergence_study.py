@@ -17,8 +17,8 @@ def outfile_to_data(filename):
         uu.append(u)
         dtdt.append(dt)
 
-    u_values = np.array(uu[1:], dtype=float)
-    dt_values = np.array(dtdt[1:], dtype=float)
+    u_values = np.array(uu, dtype=float)
+    dt_values = np.array(dtdt, dtype=float)
 
 
     def unzip(iterable):
@@ -31,7 +31,7 @@ def outfile_to_data(filename):
     return [u for u, _ in paired], [dt for _, dt in paired]
 
 
-u_values, dt_values = outfile_to_data("../out.txt")
+u_values, dt_values = outfile_to_data("wr11_out.txt")
 
 reference_value = u_values[0]
 
@@ -40,18 +40,29 @@ errors = np.abs(u_values - reference_value)
 u_values = np.array(u_values)
 dt_values = np.array(dt_values)
 
-plt.loglog(dt_values[1:], errors[1:], '.', label='num')
+plt.loglog(dt_values, errors, '.', label='newmark')
 
-u_values, dt_values = outfile_to_data("../subiteration_out.txt")
+u_values, dt_values = outfile_to_data("wr52_lin_out.txt")
 
 errors = np.abs(u_values - reference_value)
 
 u_values = np.array(u_values)
 dt_values = np.array(dt_values)
 
-plt.loglog(dt_values, errors, '.', label='num w subiterations')
-plt.loglog(dt_values[1:], dt_values[1:], '--', label='O(h^1)')
-plt.loglog(dt_values[1:], dt_values[1:]**2, ':', label='O(h^2)')
+plt.loglog(dt_values[1:], errors[1:], '1', label='wr52_lin')
+
+u_values, dt_values = outfile_to_data("wr52_quad_out.txt")
+
+errors = np.abs(u_values - reference_value)
+
+u_values = np.array(u_values)
+dt_values = np.array(dt_values)
+
+plt.loglog(dt_values[1:], errors[1:], '2', label='wr52_quad')
+
+
+plt.loglog(dt_values[1:], errors[1]/dt_values[1]*dt_values[1:], '--', label='O(h^1)')
+plt.loglog(dt_values[1:], errors[1]/dt_values[1]**2*dt_values[1:]**2, ':', label='O(h^2)')
 plt.legend()
 plt.show()
 
