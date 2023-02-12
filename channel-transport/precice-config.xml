@@ -20,19 +20,19 @@
 
     <participant name="Fluid">
       <use-mesh name="Fluid-Mesh" provide="yes" />
-      <use-mesh name="Transport-Mesh" from="Transport" />
       <write-data name="Velocity" mesh="Fluid-Mesh" />
-      <mapping:rbf-compact-tps-c2
-        direction="write"
-        support-radius="0.4"
-        from="Fluid-Mesh"
-        to="Transport-Mesh"
-        constraint="consistent" />
     </participant>
 
     <participant name="Transport">
       <use-mesh name="Transport-Mesh" provide="yes" />
+      <use-mesh name="Fluid-Mesh" from="Fluid" />
       <read-data name="Velocity" mesh="Transport-Mesh" />
+      <mapping:rbf-compact-tps-c2
+        direction="read"
+        support-radius="0.4"
+        from="Fluid-Mesh"
+        to="Transport-Mesh"
+        constraint="consistent" />
     </participant>
 
     <m2n:sockets from="Fluid" to="Transport" exchange-directory=".." />
@@ -41,7 +41,7 @@
       <time-window-size value="0.005" />
       <max-time value="1.0" />
       <participants first="Fluid" second="Transport" />
-      <exchange data="Velocity" mesh="Transport-Mesh" from="Fluid" to="Transport" />
+      <exchange data="Velocity" mesh="Fluid-Mesh" from="Fluid" to="Transport" />
     </coupling-scheme:serial-explicit>
   </solver-interface>
 </precice-configuration>
