@@ -19,13 +19,13 @@
     </mesh>
 
     <participant name="Fluid">
-      <use-mesh name="Fluid-Mesh" provide="yes" />
+      <provide-mesh name="Fluid-Mesh" />
       <write-data name="Velocity" mesh="Fluid-Mesh" />
     </participant>
 
     <participant name="Transport">
-      <use-mesh name="Transport-Mesh" provide="yes" />
-      <use-mesh name="Fluid-Mesh" from="Fluid" />
+      <provide-mesh name="Transport-Mesh" />
+      <receive-mesh name="Fluid-Mesh" from="Fluid" />
       <read-data name="Velocity" mesh="Transport-Mesh" />
       <mapping:rbf-compact-tps-c2
         direction="read"
