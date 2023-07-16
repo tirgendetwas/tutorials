@@ -27,9 +27,8 @@
       <provide-mesh name="Transport-Mesh" />
       <receive-mesh name="Fluid-Mesh" from="Fluid" />
       <read-data name="Velocity" mesh="Transport-Mesh" />
-      <mapping:rbf-compact-tps-c2
+      <mapping:nearest-neighbor
         direction="read"
-        support-radius="0.4"
         from="Fluid-Mesh"
         to="Transport-Mesh"
         constraint="consistent" />
