@@ -19,13 +19,13 @@
     </mesh>
 
     <participant name="Fluid">
-      <provide-mesh name="Fluid-Mesh" />
+      <use-mesh name="Fluid-Mesh" provide="true"/>
       <write-data name="Velocity" mesh="Fluid-Mesh" />
     </participant>
 
     <participant name="Transport">
-      <provide-mesh name="Transport-Mesh" />
-      <receive-mesh name="Fluid-Mesh" from="Fluid" />
+      <use-mesh name="Transport-Mesh" provide="true"/>
+      <use-mesh name="Fluid-Mesh" from="Fluid" />
       <read-data name="Velocity" mesh="Transport-Mesh" />
       <mapping:nearest-neighbor
         direction="read"
