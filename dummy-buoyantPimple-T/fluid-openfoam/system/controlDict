@@ -36,11 +36,11 @@ timePrecision   6;
 
 runTimeModifiable false;
 
-// functions
-// {
-//     preCICE_Adapter
-//     {
-//         type preciceAdapterFunctionObject;
-//         libs ("libpreciceAdapterFunctionObject.so");
-//     }
-// }
+functions
+{
+    preCICE_Adapter
+    {
+        type preciceAdapterFunctionObject;
+        libs ("libpreciceAdapterFunctionObject.so");
+    }
+}
